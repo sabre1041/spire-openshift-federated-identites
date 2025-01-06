@@ -1,0 +1,98 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: workload-app
+  namespace: spire-federated-identities
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workload-app
+  template:
+    metadata:
+      labels:
+        app: workload-app
+        deployment: workload-app
+    spec:
+      restartPolicy: Always
+      containers:
+        - resources: {}
+          env:
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: unix:///run/spire/sockets/spire-agent.sock
+          envFrom:
+            - secretRef:
+                name: workload-app
+          name: workload-app
+          command:
+            - /bin/bash
+            - '-c'
+            - |
+              #!/bin/bash
+
+              cat << EOF > /opt/app-root/src/get-spiffe-token.py
+              #!/opt/app-root/bin/python
+
+              from spiffe import JwtSource
+              import argparse
+
+
+              parser = argparse.ArgumentParser(description='Retrieve SPIFFE Token.')
+              parser.add_argument("-a", "--audience", help="The audience to include in the token", required=True)
+              args = parser.parse_args()
+
+              with JwtSource() as source:
+                  jwt_svid = source.fetch_svid(audience={args.audience})
+                  print(jwt_svid.token)
+              EOF
+
+              chmod +x /opt/app-root/src/get-spiffe-token.py
+
+              pip install google-api-python-client spiffe azure-cli awscli
+
+              if [ ! -z ${GOOGLE_ENABLED} ]; then
+                curl -o /opt/app-root/src/google-cloud-cli-linux-x86_64.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz
+                tar -xf /opt/app-root/src/google-cloud-cli-linux-x86_64.tar.gz -C /opt/app-root/src
+                /opt/app-root/src/google-cloud-sdk/instal.sh -q
+                echo "export PATH=\$PATH:/opt/app-root/src/google-cloud-sdk/bin" > /opt/app-root/src/.bashrc
+                rm -f /opt/app-root/src/google-cloud-cli-linux-x86_64.tar.gz
+
+                if [ ! -z ${GOOGLE_APPLICATION_CREDENTIALS_BASE64} ] && [ ! -z ${GOOGLE_APPLICATION_CREDENTIALS} ]; then
+                  echo $GOOGLE_APPLICATION_CREDENTIALS_BASE64 | base64 -d > $GOOGLE_APPLICATION_CREDENTIALS
+                fi
+              fi
+
+              # Add .ready File
+              touch /opt/app-root/src/.ready
+
+              while true; do sleep 10; done
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - '-c'
+                - ls /opt/app-root/src/.ready
+            failureThreshold: 60
+            periodSeconds: 10
+          volumeMounts:
+            - name: spiffe-workload-api
+              readOnly: true
+              mountPath: /run/spire/sockets
+          terminationMessagePolicy: File
+          image: 'registry.redhat.io/ubi9/python-311:latest'
+      serviceAccountName: workload-app
+      volumes:
+        - name: spiffe-workload-api
+          csi:
+            driver: csi.spiffe.io
+            readOnly: true
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+

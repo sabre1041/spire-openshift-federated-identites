@@ -1,0 +1,20 @@
+{
+  "Version":"2012-10-17",
+  "Statement": [
+    {
+        "Effect": "Allow",
+        "Action": [
+            "s3:ListAllMyBuckets"
+        ],
+        "Resource": "*"
+    },
+    {
+      "Action": "s3:*",
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::${UNIQUE_NAME}",
+        "arn:aws:s3:::${UNIQUE_NAME}/*"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+    "Url": "https://$OIDC_DISCOVERY_PROVIDER_HOSTNAME",
+    "ClientIDList": [
+        "$SPIFFE_AUDIENCE"
+    ],
+    "ThumbprintList": [
+        "$OIDC_PROVIDER_FINGERPRINT"
+    ]
+}
