@@ -1,3 +1,5 @@
 .DS_Store
 helm-charts-hardened
 rendered
+install/ztwim/operator/overlays/kustomization.yaml
+install/ztwim/instance/overlays/kustomization.yaml
