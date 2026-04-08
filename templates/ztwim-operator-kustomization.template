@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../base
+  - https://github.com/redhat-cop/gitops-catalog/zero-trust-workload-identity-manager/operator/overlays/${ZTWIM_OPERATOR_CHANNEL}
 
 patches:
   - target:

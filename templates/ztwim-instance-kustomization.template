@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../base
+  - https://github.com/redhat-cop/gitops-catalog/zero-trust-workload-identity-manager/instance/overlays/${ZTWIM_OPERATOR_CHANNEL}
 
 patches:
   - target:
@@ -11,36 +11,21 @@ patches:
       version: v1alpha1
     patch: |-
       - op: replace
-        path: /spec/trustDomain
-        value: '$APP_DOMAIN'
-      - op: replace
-        path: /spec/clusterName
-        value: 'cluster'
-      - op: replace
         path: /spec/jwtIssuer
-        value: 'https://spire-spiffe-oidc-discovery-provider.$APP_DOMAIN'
+        value: 'https://spire-spiffe-oidc-discovery-provider.$OPENSHIFT_CLUSTER_APP_DOMAIN'
   - target:
-      kind: SpireAgent
+      kind: ZeroTrustWorkloadIdentityManager
       group: operator.openshift.io
       version: v1alpha1
     patch: |-
       - op: replace
         path: /spec/trustDomain
-        value: '$APP_DOMAIN'
-      - op: replace
-        path: /spec/clusterName
-        value: 'cluster'
+        value: '$OPENSHIFT_CLUSTER_APP_DOMAIN'
   - target:
       kind: SpireServer
       group: operator.openshift.io
       version: v1alpha1
     patch: |-
       - op: replace
-        path: /spec/trustDomain
-        value: '$APP_DOMAIN'
-      - op: replace
-        path: /spec/clusterName
-        value: 'cluster'
-      - op: replace
         path: /spec/jwtIssuer
-        value: 'https://spire-spiffe-oidc-discovery-provider.$APP_DOMAIN'
+        value: 'https://spire-spiffe-oidc-discovery-provider.$OPENSHIFT_CLUSTER_APP_DOMAIN'
