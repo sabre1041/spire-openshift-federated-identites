@@ -4,6 +4,6 @@
         "$SPIFFE_AUDIENCE"
     ],
     "ThumbprintList": [
-        "$OIDC_PROVIDER_FINGERPRINT"
+        "$OIDC_PROVIDER_THUMBPRINT"
     ]
 }
