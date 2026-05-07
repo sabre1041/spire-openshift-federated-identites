@@ -51,7 +51,7 @@ oc apply -k install/ztwim/instance
 Wait until ZTWIM has been fully deployed
 
 ```shell
-until oc get zerotrustworkloadidentitymanager cluster -o jsonpath='{ .status.conditions[?(@.type=="Ready")].status }'=="True" >/dev/null 2>&1 ; do sleep 10; done;
+until [[ $(oc get zerotrustworkloadidentitymanager cluster -o jsonpath='{ .status.conditions[?(@.type=="Ready")].status }') == "True" ]]; do sleep 10; done
 ```
 
 ## Workload Deployment
